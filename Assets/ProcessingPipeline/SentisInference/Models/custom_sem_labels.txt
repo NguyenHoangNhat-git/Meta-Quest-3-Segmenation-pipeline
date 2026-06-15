@@ -1,0 +1,17 @@
+Bowl
+CanOfCocaCola
+FryingPan
+Glass
+Jam
+Lid
+MilkBottle
+Mug
+OilBottle
+Plate
+Rice
+Saucepan
+Sponge
+Sugar
+VinegarBottle
+WashLiquid
+background

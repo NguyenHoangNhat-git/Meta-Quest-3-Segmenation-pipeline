@@ -1,0 +1,523 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "description": "Class definitions for kitchen object detection, segmentation, and pose estimation tasks",
+    "total_classes": 16,
+    "task_suitability": ["object_detection", "instance_segmentation", "semantic_segmentation", "pose_estimation", "depth_estimation"]
+  },
+  "classes": [
+    {
+      "id": 0,
+      "name": "Bowl",
+      "aliases": ["salad_bowl", "mixing_bowl", "cereal_bowl"],
+      "category": "serveware",
+      "supercategory": "kitchenware",
+      "color_hint_rgb": [220, 210, 200],
+      "shape_profile": {
+        "geometry": "hemispherical",
+        "symmetry": "radial",
+        "typical_aspect_ratio_h_w": 0.5,
+        "hollow": true
+      },
+      "keypoints": {
+        "suggested": ["rim_center", "base_center", "rim_left", "rim_right", "rim_front", "rim_back"],
+        "count": 6
+      },
+      "segmentation": {
+        "difficulty": "medium",
+        "reason": "curved interior visible from above; material variety",
+        "recommended_approach": "instance_segmentation",
+        "mask_type": "polygon"
+      },
+      "typical_dimensions_cm": {
+        "diameter": [12, 30],
+        "height": [5, 15]
+      },
+      "material": ["ceramic", "plastic", "glass", "metal", "wood"],
+      "occlusion_risk": "medium",
+      "pose_estimation_notes": "Rim ellipse detection gives tilt; depth from rim-to-base ratio estimation"
+    },
+    {
+      "id": 1,
+      "name": "CanOfCocaCola",
+      "aliases": ["cola_can", "soda_can", "beverage_can", "coca_cola"],
+      "category": "beverage_container",
+      "supercategory": "packaging",
+      "color_hint_rgb": [196, 18, 28],
+      "shape_profile": {
+        "geometry": "cylindrical",
+        "symmetry": "radial",
+        "typical_aspect_ratio_h_w": 2.1,
+        "hollow": true
+      },
+      "keypoints": {
+        "suggested": ["top_center", "bottom_center", "pull_tab", "label_front_center"],
+        "count": 4
+      },
+      "segmentation": {
+        "difficulty": "easy",
+        "reason": "distinctive red color and branding; uniform shape",
+        "recommended_approach": "instance_segmentation",
+        "mask_type": "polygon"
+      },
+      "typical_dimensions_cm": {
+        "height": [12.2, 12.2],
+        "diameter": [6.6, 6.6]
+      },
+      "material": ["aluminum"],
+      "occlusion_risk": "low",
+      "pose_estimation_notes": "Highly standardized dimensions enable accurate 6DoF from single keypoint set; pull-tab gives top orientation"
+    },
+    {
+      "id": 2,
+      "name": "FryingPan",
+      "aliases": ["skillet", "frypan", "saute_pan", "pan"],
+      "category": "cookware",
+      "supercategory": "kitchenware",
+      "color_hint_rgb": [60, 60, 60],
+      "shape_profile": {
+        "geometry": "flat_circular_with_long_handle",
+        "symmetry": "bilateral",
+        "typical_aspect_ratio_h_w": 0.15,
+        "hollow": false
+      },
+      "keypoints": {
+        "suggested": ["pan_center", "pan_rim_left", "pan_rim_right", "handle_base", "handle_tip"],
+        "count": 5
+      },
+      "segmentation": {
+        "difficulty": "medium",
+        "reason": "dark color reduces contrast; handle extends bounding box significantly",
+        "recommended_approach": "instance_segmentation",
+        "mask_type": "polygon"
+      },
+      "typical_dimensions_cm": {
+        "pan_diameter": [20, 32],
+        "total_length_with_handle": [40, 60],
+        "depth": [3, 6]
+      },
+      "material": ["cast_iron", "stainless_steel", "non_stick_coated", "aluminum"],
+      "occlusion_risk": "medium",
+      "pose_estimation_notes": "Handle vector gives pan orientation in XY; tilt estimated from rim ellipse deformation"
+    },
+    {
+      "id": 3,
+      "name": "Glass",
+      "aliases": ["drinking_glass", "cup", "tumbler"],
+      "category": "drinkware",
+      "supercategory": "kitchenware",
+      "color_hint_rgb": [200, 230, 255],
+      "shape_profile": {
+        "geometry": "cylindrical",
+        "symmetry": "radial",
+        "typical_aspect_ratio_h_w": 2.0,
+        "hollow": true
+      },
+      "keypoints": {
+        "suggested": ["rim_center", "base_center", "rim_left", "rim_right"],
+        "count": 4
+      },
+      "segmentation": {
+        "difficulty": "hard",
+        "reason": "transparent material causes reflections and blending with background",
+        "recommended_approach": "instance_segmentation",
+        "mask_type": "polygon"
+      },
+      "typical_dimensions_cm": {
+        "height": [8, 15],
+        "diameter": [6, 10]
+      },
+      "material": ["glass", "plastic"],
+      "occlusion_risk": "medium",
+      "pose_estimation_notes": "Radial symmetry allows top-down rim detection; base ellipse useful for orientation"
+    },
+    {
+      "id": 4,
+      "name": "Jam",
+      "aliases": ["jam_jar", "jelly_jar", "fruit_preserve", "marmalade"],
+      "category": "food_container",
+      "supercategory": "packaging",
+      "color_hint_rgb": [180, 40, 40],
+      "shape_profile": {
+        "geometry": "short_cylindrical_jar",
+        "symmetry": "radial",
+        "typical_aspect_ratio_h_w": 0.9,
+        "hollow": true
+      },
+      "keypoints": {
+        "suggested": ["lid_center", "base_center", "label_center"],
+        "count": 3
+      },
+      "segmentation": {
+        "difficulty": "easy",
+        "reason": "visible label and colored contents; well-defined jar shape",
+        "recommended_approach": "instance_segmentation",
+        "mask_type": "polygon"
+      },
+      "typical_dimensions_cm": {
+        "height": [7, 12],
+        "diameter": [6, 10]
+      },
+      "material": ["glass", "plastic"],
+      "occlusion_risk": "low",
+      "pose_estimation_notes": "Lid plane normal gives upright orientation; label face gives yaw rotation"
+    },
+    {
+      "id": 5,
+      "name": "Lid",
+      "aliases": ["pot_lid", "pan_lid", "jar_lid", "cover"],
+      "category": "kitchenware_accessory",
+      "supercategory": "kitchenware",
+      "color_hint_rgb": [150, 150, 150],
+      "shape_profile": {
+        "geometry": "flat_to_domed_circular",
+        "symmetry": "radial",
+        "typical_aspect_ratio_h_w": 0.2,
+        "hollow": false
+      },
+      "keypoints": {
+        "suggested": ["knob_top", "rim_center", "rim_north", "rim_south", "rim_east", "rim_west"],
+        "count": 6
+      },
+      "segmentation": {
+        "difficulty": "medium",
+        "reason": "often matches or rests on parent container; glass lids are transparent",
+        "recommended_approach": "instance_segmentation",
+        "mask_type": "ellipse_or_polygon"
+      },
+      "typical_dimensions_cm": {
+        "diameter": [14, 32],
+        "height": [2, 6]
+      },
+      "material": ["glass", "stainless_steel", "plastic"],
+      "occlusion_risk": "high",
+      "pose_estimation_notes": "Knob keypoint and rim ellipse together give full 6DoF; critical for robotic placement tasks"
+    },
+    {
+      "id": 6,
+      "name": "MilkBottle",
+      "aliases": ["milk_jug", "milk_carton", "dairy_bottle"],
+      "category": "beverage_container",
+      "supercategory": "packaging",
+      "color_hint_rgb": [240, 245, 255],
+      "shape_profile": {
+        "geometry": "bottle_with_handle_or_carton",
+        "symmetry": "bilateral",
+        "typical_aspect_ratio_h_w": 2.5,
+        "hollow": true
+      },
+      "keypoints": {
+        "suggested": ["cap_center", "base_center", "handle_top", "handle_bottom", "label_center"],
+        "count": 5
+      },
+      "segmentation": {
+        "difficulty": "medium",
+        "reason": "white color blends with light backgrounds; variable shapes across brands",
+        "recommended_approach": "instance_segmentation",
+        "mask_type": "polygon"
+      },
+      "typical_dimensions_cm": {
+        "height": [20, 32],
+        "width": [8, 14]
+      },
+      "material": ["plastic", "glass", "cardboard"],
+      "occlusion_risk": "low",
+      "pose_estimation_notes": "Handle or cap orientation disambiguates pose; label plane gives frontal direction"
+    },
+    {
+      "id": 7,
+      "name": "Mug",
+      "aliases": ["coffee_mug", "tea_mug", "cup_with_handle"],
+      "category": "drinkware",
+      "supercategory": "kitchenware",
+      "color_hint_rgb": [180, 130, 100],
+      "shape_profile": {
+        "geometry": "cylindrical_with_handle",
+        "symmetry": "bilateral",
+        "typical_aspect_ratio_h_w": 1.2,
+        "hollow": true
+      },
+      "keypoints": {
+        "suggested": ["rim_center", "base_center", "handle_top", "handle_bottom", "handle_outer"],
+        "count": 5
+      },
+      "segmentation": {
+        "difficulty": "easy",
+        "reason": "distinct handle breaks symmetry and aids detection; usually opaque",
+        "recommended_approach": "instance_segmentation",
+        "mask_type": "polygon"
+      },
+      "typical_dimensions_cm": {
+        "height": [9, 12],
+        "diameter": [7, 10],
+        "handle_protrusion": [3, 5]
+      },
+      "material": ["ceramic", "porcelain", "plastic", "metal"],
+      "occlusion_risk": "low",
+      "pose_estimation_notes": "Handle keypoints critical for grasp planning; handle direction gives yaw angle directly"
+    },
+    {
+      "id": 8,
+      "name": "OilBottle",
+      "aliases": ["cooking_oil", "olive_oil_bottle", "vegetable_oil"],
+      "category": "condiment_container",
+      "supercategory": "packaging",
+      "color_hint_rgb": [200, 170, 50],
+      "shape_profile": {
+        "geometry": "tall_narrow_bottle",
+        "symmetry": "radial_or_bilateral",
+        "typical_aspect_ratio_h_w": 3.5,
+        "hollow": true
+      },
+      "keypoints": {
+        "suggested": ["cap_center", "shoulder_left", "shoulder_right", "base_center", "label_center"],
+        "count": 5
+      },
+      "segmentation": {
+        "difficulty": "medium",
+        "reason": "transparent or semi-transparent glass reveals colored oil; varied bottle shapes",
+        "recommended_approach": "instance_segmentation",
+        "mask_type": "polygon"
+      },
+      "typical_dimensions_cm": {
+        "height": [25, 35],
+        "diameter": [6, 10]
+      },
+      "material": ["glass", "plastic"],
+      "occlusion_risk": "low",
+      "pose_estimation_notes": "Tall slender profile gives good aspect ratio cue; shoulder keypoints help with tilt detection"
+    },
+    {
+      "id": 9,
+      "name": "Plate",
+      "aliases": ["dish", "dinner_plate", "side_plate"],
+      "category": "serveware",
+      "supercategory": "kitchenware",
+      "color_hint_rgb": [240, 240, 240],
+      "shape_profile": {
+        "geometry": "flat_circular",
+        "symmetry": "radial",
+        "typical_aspect_ratio_h_w": 0.1,
+        "hollow": false
+      },
+      "keypoints": {
+        "suggested": ["center", "north_rim", "south_rim", "east_rim", "west_rim"],
+        "count": 5
+      },
+      "segmentation": {
+        "difficulty": "medium",
+        "reason": "flat profile makes depth ambiguous; often partially occluded by food",
+        "recommended_approach": "instance_segmentation",
+        "mask_type": "ellipse_or_polygon"
+      },
+      "typical_dimensions_cm": {
+        "diameter": [18, 30],
+        "height": [1, 3]
+      },
+      "material": ["ceramic", "porcelain", "plastic", "glass"],
+      "occlusion_risk": "high",
+      "pose_estimation_notes": "Ellipse fitting on rim gives tilt and rotation; center keypoint critical for placement tasks"
+    },
+    {
+      "id": 10,
+      "name": "Rice",
+      "aliases": ["cooked_rice", "raw_rice", "rice_grains"],
+      "category": "food",
+      "supercategory": "ingredient",
+      "color_hint_rgb": [245, 235, 210],
+      "shape_profile": {
+        "geometry": "granular_heap",
+        "symmetry": "none",
+        "typical_aspect_ratio_h_w": null,
+        "hollow": false
+      },
+      "keypoints": {
+        "suggested": ["heap_apex", "heap_centroid"],
+        "count": 2
+      },
+      "segmentation": {
+        "difficulty": "hard",
+        "reason": "amorphous shape, no fixed boundary, texture-based class",
+        "recommended_approach": "semantic_segmentation",
+        "mask_type": "freeform_polygon"
+      },
+      "typical_dimensions_cm": {
+        "grain_length": [0.5, 0.8],
+        "heap_variable": true
+      },
+      "material": ["organic"],
+      "occlusion_risk": "low",
+      "pose_estimation_notes": "Not suitable for 6DoF pose; centroid or bounding-box regression preferred"
+    },
+    {
+      "id": 11,
+      "name": "Saucepan",
+      "aliases": ["small_pot", "sauce_pot", "milk_pan"],
+      "category": "cookware",
+      "supercategory": "kitchenware",
+      "color_hint_rgb": [80, 80, 90],
+      "shape_profile": {
+        "geometry": "cylindrical_with_single_handle",
+        "symmetry": "bilateral",
+        "typical_aspect_ratio_h_w": 0.8,
+        "hollow": true
+      },
+      "keypoints": {
+        "suggested": ["rim_center", "base_center", "handle_base", "handle_tip", "rim_opposite_handle"],
+        "count": 5
+      },
+      "segmentation": {
+        "difficulty": "medium",
+        "reason": "similar appearance to mug at distance; dark material reduces texture detail",
+        "recommended_approach": "instance_segmentation",
+        "mask_type": "polygon"
+      },
+      "typical_dimensions_cm": {
+        "diameter": [14, 22],
+        "height": [10, 16],
+        "handle_length": [15, 22]
+      },
+      "material": ["stainless_steel", "aluminum", "non_stick_coated", "cast_iron"],
+      "occlusion_risk": "medium",
+      "pose_estimation_notes": "Handle direction gives dominant orientation; rim ellipse gives tilt; distinguishable from frying pan by depth ratio"
+    },
+    {
+      "id": 12,
+      "name": "Sponge",
+      "aliases": ["kitchen_sponge", "dish_sponge", "scrub_sponge", "scourer"],
+      "category": "cleaning_tool",
+      "supercategory": "household_item",
+      "color_hint_rgb": [255, 220, 0],
+      "shape_profile": {
+        "geometry": "rectangular_block",
+        "symmetry": "bilateral",
+        "typical_aspect_ratio_h_w": 0.4,
+        "hollow": false
+      },
+      "keypoints": {
+        "suggested": ["top_left", "top_right", "bottom_left", "bottom_right", "center"],
+        "count": 5
+      },
+      "segmentation": {
+        "difficulty": "easy",
+        "reason": "bright distinctive color (yellow/green); simple rectangular shape",
+        "recommended_approach": "instance_segmentation",
+        "mask_type": "quadrilateral_polygon"
+      },
+      "typical_dimensions_cm": {
+        "length": [9, 13],
+        "width": [6, 8],
+        "height": [2, 4]
+      },
+      "material": ["foam", "cellulose", "polyester_scrub"],
+      "occlusion_risk": "medium",
+      "pose_estimation_notes": "Bounding box corners give 4 natural keypoints; deformable object so pose may shift; color segmentation very reliable"
+    },
+    {
+      "id": 13,
+      "name": "Sugar",
+      "aliases": ["sugar_bowl", "sugar_packet", "sugar_bag", "granulated_sugar"],
+      "category": "food_ingredient",
+      "supercategory": "ingredient",
+      "color_hint_rgb": [255, 250, 230],
+      "shape_profile": {
+        "geometry": "container_or_granular",
+        "symmetry": "depends_on_packaging",
+        "typical_aspect_ratio_h_w": null,
+        "hollow": false
+      },
+      "keypoints": {
+        "suggested": ["container_top", "container_base", "label_center"],
+        "count": 3
+      },
+      "segmentation": {
+        "difficulty": "medium",
+        "reason": "appearance varies greatly by packaging; granular form similar to rice/salt",
+        "recommended_approach": "instance_segmentation",
+        "mask_type": "polygon"
+      },
+      "typical_dimensions_cm": {
+        "bag_height": [15, 30],
+        "bowl_diameter": [8, 15]
+      },
+      "material": ["organic", "paper_packaging", "plastic_packaging"],
+      "occlusion_risk": "medium",
+      "pose_estimation_notes": "Packaging geometry drives pose; label plane useful for frontal orientation detection"
+    },
+    {
+      "id": 14,
+      "name": "VinegarBottle",
+      "aliases": ["vinegar", "white_vinegar", "balsamic_vinegar", "apple_cider_vinegar"],
+      "category": "condiment_container",
+      "supercategory": "packaging",
+      "color_hint_rgb": [200, 180, 120],
+      "shape_profile": {
+        "geometry": "tall_bottle_variable",
+        "symmetry": "radial_or_bilateral",
+        "typical_aspect_ratio_h_w": 3.0,
+        "hollow": true
+      },
+      "keypoints": {
+        "suggested": ["cap_center", "neck_midpoint", "shoulder_left", "shoulder_right", "base_center", "label_center"],
+        "count": 6
+      },
+      "segmentation": {
+        "difficulty": "medium",
+        "reason": "often transparent glass with colored liquid; label varies by brand",
+        "recommended_approach": "instance_segmentation",
+        "mask_type": "polygon"
+      },
+      "typical_dimensions_cm": {
+        "height": [20, 32],
+        "diameter": [5, 9]
+      },
+      "material": ["glass", "plastic"],
+      "occlusion_risk": "low",
+      "pose_estimation_notes": "Similar pipeline to OilBottle; neck taper region useful for distinguishing from oil; liquid color inside aids semantic class"
+    },
+    {
+      "id": 15,
+      "name": "WashLiquid",
+      "aliases": ["dish_soap", "washing_up_liquid", "detergent_bottle", "dish_detergent"],
+      "category": "cleaning_product",
+      "supercategory": "household_item",
+      "color_hint_rgb": [0, 180, 120],
+      "shape_profile": {
+        "geometry": "ergonomic_bottle_with_pump_or_squeeze",
+        "symmetry": "bilateral",
+        "typical_aspect_ratio_h_w": 2.8,
+        "hollow": true
+      },
+      "keypoints": {
+        "suggested": ["nozzle_tip", "cap_center", "shoulder_left", "shoulder_right", "base_center", "label_center"],
+        "count": 6
+      },
+      "segmentation": {
+        "difficulty": "easy",
+        "reason": "bright branding colors; ergonomic shape with distinctive nozzle or pump",
+        "recommended_approach": "instance_segmentation",
+        "mask_type": "polygon"
+      },
+      "typical_dimensions_cm": {
+        "height": [18, 30],
+        "width": [7, 12]
+      },
+      "material": ["plastic", "hdpe"],
+      "occlusion_risk": "low",
+      "pose_estimation_notes": "Nozzle/pump keypoint gives top orientation; label face gives yaw; squeeze deformation possible so rigid-body assumption may not hold fully"
+    }
+  ],
+  "cv_task_summary": {
+    "easy_segmentation": ["CanOfCocaCola", "Sponge", "Mug", "WashLiquid", "Jam"],
+    "hard_segmentation": ["Glass", "Rice"],
+    "best_for_pose_estimation": ["CanOfCocaCola", "Mug", "FryingPan", "Lid", "Saucepan"],
+    "deformable_objects": ["Sponge"],
+    "amorphous_classes": ["Rice", "Sugar"],
+    "transparent_materials": ["Glass", "Lid", "OilBottle", "VinegarBottle"],
+    "recommended_augmentations": {
+      "transparent_objects": ["specular_highlight_aug", "background_blending", "refraction_sim"],
+      "dark_objects": ["brightness_jitter", "contrast_enhancement"],
+      "white_objects": ["background_contrast_boost", "hue_shift"]
+    }
+  }
+}

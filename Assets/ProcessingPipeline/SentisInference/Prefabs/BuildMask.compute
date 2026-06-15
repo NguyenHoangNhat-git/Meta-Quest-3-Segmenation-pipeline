@@ -1,0 +1,36 @@
+#pragma kernel BuildMask
+
+StructuredBuffer<float> _Protos;
+int _ProtosOffset; // New: handle Sentis buffer padding
+StructuredBuffer<float> _Coeffs;
+RWTexture2D<float4> _MaskOut;
+
+int _ProtoSize;
+int _NumCoeffs;
+float4 _Tint;
+float _Threshold;
+
+[numthreads(8,8,1)]
+void BuildMask(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= (uint)_ProtoSize || id.y >= (uint)_ProtoSize) return;
+
+    // Flip Y: Tensor row 0 is top, Texture y 0 is bottom
+    int row = (_ProtoSize - 1) - (int)id.y;
+    int col = (int)id.x;
+
+    float val = 0;
+    int spatialSize = _ProtoSize * _ProtoSize;
+
+    for (int k = 0; k < _NumCoeffs; k++)
+    {
+        // Add offset to the flat index calculation
+        int index = _ProtosOffset + (k * spatialSize) + (row * _ProtoSize) + col;
+        val += _Coeffs[k] * _Protos[index];
+    }
+
+    // Sigmoid
+    val = 1.0 / (1.0 + exp(-val));
+
+    _MaskOut[id.xy] = val > _Threshold ? _Tint : float4(0,0,0,0);
+}
