@@ -14,6 +14,8 @@
 /[Ll]ogs/
 /[Uu]ser[Ss]ettings/
 *.log
+*/_Recovery/
+*_DoNotShip/
 
 # By default unity supports Blender asset imports, *.blend1 blender files do not need to be commited to version control.
 *.blend1
@@ -36,6 +38,7 @@
 
 # Visual Studio cache directory
 .vs/
+.vscode/
 
 # Gradle cache directory
 .gradle/
@@ -71,6 +74,7 @@ sysinfo.txt
 mono_crash.*
 
 # Builds
+*_BackUpThisFolder_ButDontShipItWithYourGame/
 *.apk
 *.aab
 *.unitypackage

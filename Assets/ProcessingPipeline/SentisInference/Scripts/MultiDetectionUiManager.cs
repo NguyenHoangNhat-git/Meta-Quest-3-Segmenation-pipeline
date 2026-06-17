@@ -7,6 +7,10 @@ using UnityEngine.UI;
 
 namespace CVMQ3.ProcessingPipeline
 {
+    /// <summary>
+    /// Receives detection results and projects each bounding box into world space
+    /// using depth raycasting. Manages a prefab pool to avoid per-frame instantiation.
+    /// </summary>
     [MetaCodeSample("PassthroughCameraApiSamples-MultiObjectDetection")]
     public class MultiDetectionUiManager : MonoBehaviour
     {
@@ -27,9 +31,14 @@ namespace CVMQ3.ProcessingPipeline
         [SerializeField]
         private TextAsset m_objectInfoJson;
 
+        // Active boxes currently visible in the scene.
         internal readonly List<BoundingBoxData> m_boxDrawn = new();
         private string[] m_labels;
+
+        // Pool of inactive box RectTransforms to reuse instead of instantiating.
         private readonly List<BoundingBoxData> m_boxPool = new();
+
+        // Seconds a box persists without a matching detection before being pooled.
         private float timeToPersistBoxes = 0.75f;
 
         public class BoundingBoxData
@@ -67,6 +76,10 @@ namespace CVMQ3.ProcessingPipeline
             m_labels = labelsAsset.text.Split('\n');
         }
 
+        /// <summary>
+        /// Projects each detection into world space and updates or creates bounding box UI elements.
+        /// Uses depth raycasting to place boxes on real surfaces at the correct depth.
+        /// </summary>
         public void DrawUIBoxes(
             List<(int classId, Vector4 boundingBox)> detections,
             Vector2 inputSize,
@@ -97,10 +110,9 @@ namespace CVMQ3.ProcessingPipeline
                 Vector2 normalizedCenter = rect.center / inputSize;
                 Vector2 center = currentResolution * (normalizedCenter - Vector2.one * 0.5f);
 
-                // Get the object class name
                 var classname = m_labels[detection.classId].Replace(" ", "_");
 
-                // Get the 3D marker world position using Depth Raycast
+                // Cast a ray from the camera through the box centre to find the world surface.
                 var ray = m_cameraAccess.ViewportPointToRay(
                     new Vector2(normalizedCenter.x, 1.0f - normalizedCenter.y),
                     cameraPose
@@ -111,6 +123,8 @@ namespace CVMQ3.ProcessingPipeline
                     Debug.Log($"RaycastManager failed, ray:{ray}, cameraPose:{cameraPose}");
                     continue;
                 }
+
+                // Normalised rect in Y-up viewport space for downstream use (crop extractor).
                 var normRect = new Rect(
                     rect.x / inputSize.x,
                     1f - rect.yMax / inputSize.y,
@@ -125,7 +139,8 @@ namespace CVMQ3.ProcessingPipeline
                     .GetPoint(distance);
                 var normal = (worldSpaceCenter - cameraPose.position).normalized;
 
-                // Intersect corner rays with the plane perpendicular to the camera view
+                // Project bbox corners onto the plane perpendicular to the view ray at the hit point,
+                // then measure the world-space extent to size the RectTransform correctly.
                 var plane = new Plane(normal, worldSpaceCenter);
                 var minRay = m_cameraAccess.ViewportPointToRay(normRect.min, cameraPose);
                 var maxRay = m_cameraAccess.ViewportPointToRay(normRect.max, cameraPose);
@@ -134,7 +149,7 @@ namespace CVMQ3.ProcessingPipeline
                 var min = minRay.GetPoint(intersectionDistanceMin);
                 var max = maxRay.GetPoint(intersectionDistanceMax);
 
-                // Transform world-space positions to camera's local space to get 2D size
+                // Transform to camera-local space to get a 2D size free of perspective distortion.
                 var topLeftLocal =
                     Quaternion.Inverse(cameraPose.rotation) * (min - cameraPose.position);
                 var bottomRightLocal =
@@ -145,6 +160,7 @@ namespace CVMQ3.ProcessingPipeline
                 );
 
                 var boxData = GetOrCreateBoundingBoxData(detection.classId, worldSpaceCenter, size);
+
                 // Store normalized coords directly from the detection
                 boxData.NormalizedBBox = new Vector4(
                     x1 / inputSize.x,
@@ -166,6 +182,10 @@ namespace CVMQ3.ProcessingPipeline
             Debug.Log("[Diag] Finished drawing UI");
         }
 
+        /// <summary>
+        /// Returns an existing box that overlaps the new detection (same class) or creates a new one.
+        /// Removes overlapping boxes of a different class to avoid UI clutter.
+        /// </summary>
         private BoundingBoxData GetOrCreateBoundingBoxData(
             int classId,
             Vector3 worldSpaceCenter,

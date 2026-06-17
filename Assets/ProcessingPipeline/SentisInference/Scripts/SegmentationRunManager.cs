@@ -119,7 +119,7 @@ namespace CVMQ3.ProcessingPipeline
             new System.Collections.Generic.List<int>();
         private bool[] m_nmsSuppressed = new bool[0];
 
-        private const float InferenceTimeout = 15f;
+        private const float InferenceTimeout = 5f;
         private const float MinInferenceInterval = 0.15f;
 
         // Number of mask coefficients produced by the instance seg head.
@@ -585,7 +585,7 @@ namespace CVMQ3.ProcessingPipeline
                 targetClassId = selectedClassId,
                 label = GetLabel(selectedClassId),
                 cropViewport = cropInfo.ViewportNorm,
-                modelInputUVRect  = cropInfo.ModelInputUVRect,
+                modelInputUVRect = cropInfo.ModelInputUVRect,
                 isPlaceholder = false,
             };
 

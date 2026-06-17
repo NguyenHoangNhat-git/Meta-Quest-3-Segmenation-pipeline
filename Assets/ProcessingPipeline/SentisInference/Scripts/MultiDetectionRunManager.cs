@@ -49,11 +49,13 @@ namespace CVMQ3.ProcessingPipeline
         private readonly List<(int classId, Vector4 boundingBox)> m_detections =
             new List<(int classId, Vector4 boundingBox)>();
 
+        // Pre-allocated NMS working lists — cleared and reused each call.
         private readonly List<int> m_nmsFilteredIndices = new List<int>();
         private bool[] m_nmsSuppressed = new bool[0];
 
         public System.Action OnInferenceStart;
         public System.Action OnInferenceComplete;
+        int framecount = 0;
 
         private void Awake()
         {
@@ -71,19 +73,26 @@ namespace CVMQ3.ProcessingPipeline
             m_uiInference.SetLabels(m_labelsAsset);
             while (true)
             {
+                // if (framecount % 2 == 0)
                 yield return RunInference();
+                // framecount++;
             }
         }
 
         private void OnDestroy()
         {
             m_inputTensor?.Dispose();
+            // Flush pending GPU operations before disposing the worker.
             m_engine?.PeekOutput(0)?.CompleteAllPendingOperations();
             m_engine?.PeekOutput(1)?.CompleteAllPendingOperations();
             m_engine?.PeekOutput(2)?.CompleteAllPendingOperations();
             m_engine?.Dispose();
         }
 
+        /// <summary>
+        /// Warms up the GPU worker with a dummy input so the first real frame
+        /// doesn't pay the shader-compilation cost. Call from a loading screen.
+        /// </summary>
         internal static void PreloadModel(ModelAsset modelAsset)
         {
             var model = ModelLoader.Load(modelAsset);
@@ -116,6 +125,7 @@ namespace CVMQ3.ProcessingPipeline
                 yield break;
             }
 
+            // Verify head pose is valid before capturing the frame.
             [DllImport("OVRPlugin", CallingConvention = CallingConvention.Cdecl)]
             static extern OVRPlugin.Result ovrp_GetNodePoseStateAtTime(
                 double time,
@@ -138,13 +148,13 @@ namespace CVMQ3.ProcessingPipeline
 
             var cachedCameraPose = m_cameraAccess.GetCameraPose();
             Texture targetTexture = m_cameraAccess.GetTexture();
-            Debug.Log(
-                $"[Detect] Camera texture size: {targetTexture.width}x{targetTexture.height}"
-            );
-            TextureConverter.ToTensor(targetTexture, m_inputTensor, m_textureTransform);
 
+            // Write camera frame into the pre-allocated tensor.
+            TextureConverter.ToTensor(targetTexture, m_inputTensor, m_textureTransform);
             m_engine.Schedule(m_inputTensor);
 
+            // Kick off all three GPU→CPU readbacks simultaneously so the driver
+            // can pipeline the transfers rather than serialising them.
             var boxesAwaiter = (m_engine.PeekOutput(0) as Tensor<float>)
                 .ReadbackAndCloneAsync()
                 .GetAwaiter();
@@ -155,7 +165,6 @@ namespace CVMQ3.ProcessingPipeline
                 .ReadbackAndCloneAsync()
                 .GetAwaiter();
 
-            // Yield until ALL three are ready in parallel.
             while (
                 !boxesAwaiter.IsCompleted
                 || !classIDsAwaiter.IsCompleted
@@ -165,6 +174,7 @@ namespace CVMQ3.ProcessingPipeline
                 yield return null;
             }
 
+            // Declare all results before any early-exit so 'using' disposal is always reached.
             using var boxes = boxesAwaiter.GetResult();
             using var classIDs = classIDsAwaiter.GetResult();
             using var scores = scoresAwaiter.GetResult();
@@ -190,6 +200,9 @@ namespace CVMQ3.ProcessingPipeline
             m_uiInference.DrawUIBoxes(m_detections, m_inputSize, cachedCameraPose);
         }
 
+        /// <summary>
+        /// Filters raw detections with score threshold then greedy IoU-based NMS.
+        /// </summary>
         private static void NonMaxSuppression(
             List<(int classId, Vector4 boundingBox)> outDetections,
             Tensor<float> boxes,

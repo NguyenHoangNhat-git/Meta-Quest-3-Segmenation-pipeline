@@ -3,6 +3,11 @@ using UnityEngine.UI;
 
 namespace CVMQ3.ProcessingPipeline
 {
+    /// <summary>
+    /// Each frame, casts a ray from the head's forward direction and selects the bounding
+    /// box whose world-space centre is most aligned with the gaze ray. Fires
+    /// <see cref="OnSelectionChanged"/> whenever the selected box changes.
+    /// </summary>
     public class HeadGazeSelector : MonoBehaviour
     {
         [Header("Scene References")]
@@ -32,6 +37,8 @@ namespace CVMQ3.ProcessingPipeline
         private Color m_selectedBoxColor = Color.red;
 
         private MultiDetectionUiManager.BoundingBoxData m_currentlySelected;
+
+        /// <summary>Fired when the gaze moves onto or off a bounding box. Argument is null when nothing is selected.</summary>
         public System.Action<MultiDetectionUiManager.BoundingBoxData> OnSelectionChanged;
 
         private void Awake()
@@ -70,6 +77,10 @@ namespace CVMQ3.ProcessingPipeline
 
         // ── Selection ────────────────────────────────────────────────────────
 
+        /// <summary>
+        /// Among all active boxes, picks the one whose centre falls within its hit radius
+        /// of the gaze ray and has the smallest angular deviation from the gaze direction.
+        /// </summary>
         private void SelectBoxOnRay(Vector3 gazeOrigin, Vector3 gazeDir)
         {
             var boxes = m_uiManager.m_boxDrawn;
@@ -92,7 +103,6 @@ namespace CVMQ3.ProcessingPipeline
                 var box = boxes[i];
                 if (box?.BoxRectTransform == null)
                 {
-                    // Debug.Log($"[HeadGaze] Box {i}: RectTransform is null!");
                     continue;
                 }
 
@@ -104,6 +114,7 @@ namespace CVMQ3.ProcessingPipeline
 
                 // Project box center onto the gaze ray
                 float projDist = Vector3.Dot(toBox, gazeDir);
+                // Discard boxes behind the camera.
                 if (projDist < 0f)
                 {
                     // Debug.Log($"[HeadGaze] Box {i}: Behind camera. projDist={projDist:F2}");
@@ -126,10 +137,6 @@ namespace CVMQ3.ProcessingPipeline
                 float hitRadius =
                     Mathf.Sqrt(worldWidth * worldWidth + worldHeight * worldHeight) * 0.5f;
 
-                // Debug.Log($"[HeadGaze] Box {i}: center={boxCenter:F2} projDist={projDist:F2}");
-                // Debug.Log($"Box {i}: rayDist={rayToBoxDist:F2} hitRadius={hitRadius:F2} " +
-                //             $"size={worldWidth:F2}x{worldHeight:F2} scale={worldScale:F2}");
-
                 // Check if the ray passes within the box bounds
                 if (rayToBoxDist > hitRadius)
                 {
@@ -148,8 +155,6 @@ namespace CVMQ3.ProcessingPipeline
                     closestInfo = $"Box {i}: HIT angle={angle:F2}";
                 }
             }
-
-            // Debug.Log($"[HeadGaze] Result: {closestInfo} | Selected: {(best != null ? best.ClassName : "none")}");
 
             if (best == m_currentlySelected)
                 return;

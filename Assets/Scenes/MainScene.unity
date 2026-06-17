@@ -667,7 +667,7 @@ MonoBehaviour:
   m_debugPlaceholder: 0
   m_cropExtractor: {fileID: 2030009089}
   m_uiManager: {fileID: 375067753}
-  OnnxModel: {fileID: 5022602860645237092, guid: 6594e1c4405c1354880654c19a2b08c4, type: 3}
+  OnnxModel: {fileID: 5022602860645237092, guid: e678c91d03275824ab530bf2626ef0f2, type: 3}
 --- !u!114 &375067753
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2346,6 +2346,10 @@ PrefabInstance:
       propertyPath: m_cameraAccess
       value: 
       objectReference: {fileID: 965516620}
+    - target: {fileID: 2681575481727882275, guid: 927c1b782bb796b4b9b433d533cbccca, type: 3}
+      propertyPath: m_iouThreshold
+      value: 0.3
+      objectReference: {fileID: 0}
     - target: {fileID: 2681575481727882275, guid: 927c1b782bb796b4b9b433d533cbccca, type: 3}
       propertyPath: m_uiMenuManager
       value: 
